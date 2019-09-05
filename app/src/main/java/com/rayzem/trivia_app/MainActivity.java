@@ -9,14 +9,19 @@ import android.hardware.SensorManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.RotateAnimation;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, SensorEventListener {
@@ -26,9 +31,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Sensor gyroscopeSensor;
     RotateAnimation rotateAnimation;
     int lastDegree = 0;
+    static int COUNT_NUMBER_PLAYERS = 0;
+
+    boolean namesAreDone = false;
 
     private long mRotationTime = 0;
     private static final int ROTATION_WAIT_TIME_MS = 100;
+
+    private LinearLayout container_logo;
+    private ArrayList<String> players;
+
+    private TextView playerOne, playerTwo;
+
+    CharSequence[] values = {" Homero "," Aristoteles "," El Barto ", "None"};
+
+    private QuestionLibrary questionLibrary;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,10 +53,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         bottle = findViewById(R.id.bottle);
+        container_logo = findViewById(R.id.container_logo);
+        playerOne = findViewById(R.id.playerOne);
+        playerTwo = findViewById(R.id.playerTwo);
+
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        players = new ArrayList<>();
+
+
+        questionLibrary = new QuestionLibrary();
 
         bottle.setOnClickListener(this);
+
+        showAlertDialogNames();
     }
 
     @Override
@@ -154,8 +181,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("Hora de la trivia!");
+               /* AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Time to trivia!");
                 builder.setMessage("Responde una pregunta de cultura general");
                 builder.setPositiveButton("CERRAR", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
@@ -163,7 +190,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 });
 
-                builder.show();
+                builder.show();*/
+
+                AlertDialog alertDialog1 = null;
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Time to trivia!");
+
+                Random rnd = new Random();
+                int numQuestions = rnd.nextInt(5);
+                builder.setMessage(questionLibrary.getQuestion(numQuestions));
+
+                CharSequence [] answers = questionLibrary.getChoices(numQuestions);
+
+                builder.setSingleChoiceItems(answers, -1, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+
+                        switch(item){
+                            case 0:
+                                Toast.makeText(MainActivity.this, "CORREEECT!", Toast.LENGTH_LONG).show();
+                                break;
+                            case 1:
+                                Toast.makeText(MainActivity.this, "WRONG answer!", Toast.LENGTH_LONG).show();
+                                break;
+                            case 2:
+                                Toast.makeText(MainActivity.this, "WRONG answer!", Toast.LENGTH_LONG).show();
+                                break;
+                        }
+                        dialog.dismiss();
+                    }
+                });
+                alertDialog1 = builder.create();
+                alertDialog1.show();
             }
 
             @Override
@@ -207,4 +264,130 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
+
+
+    public void showAlertDialogNames () {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final EditText edittext = new EditText(this);
+        builder.setMessage("Enter name player:");
+        builder.setTitle("Lets play!");
+        builder.setCancelable(false);
+        builder.setView(edittext);
+
+        builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                //What ever you want to do with the value
+
+                String namePlayer = edittext.getText().toString();
+                COUNT_NUMBER_PLAYERS ++;
+
+                players.add(namePlayer);
+
+
+
+                showAlertDialogNames();
+            }
+        });
+
+
+
+        builder.setNegativeButton("Lets, go and play!", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // what ever you want to do with No option.
+                namesAreDone = true;
+                container_logo.setVisibility(View.GONE);
+                bottle.setVisibility(View.VISIBLE);
+
+                int [] randomNamesNumbers = getTwoRandomNumbers();
+
+
+                String name1 = players.get(randomNamesNumbers [0]);
+                String name2 = players.get(randomNamesNumbers [1]);
+
+
+                playerOne.setText(name1);
+                playerTwo.setText(name2);
+
+                showMultiChoiceQuestion();
+
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+
+
+
+        dialog.show();
+
+        //dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(false);
+
+        if (COUNT_NUMBER_PLAYERS >= 2) {
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(true);
+        }else{
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(false);
+        }
+
+
+
+    }
+
+
+    public int [] getTwoRandomNumbers(){
+        int[] numbers = new int[2];
+
+        Random rand = new Random();
+        int number1 = 0 ,number2 = 0;
+        boolean equals = false;
+
+
+        while(!equals){
+            number1 = rand.nextInt(players.size());
+            number2 = rand.nextInt(players.size());
+
+            equals = number1 != number2;
+        }
+
+        Log.i("OSCAR",""+number1);
+        Log.i("OSCAR",""+number2);
+
+        numbers[0] = number1;
+        numbers[1] = number2;
+
+        return numbers;
+    }
+
+
+    public void showMultiChoiceQuestion (){
+        AlertDialog alertDialog1 = null;
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("Time to trivia!");
+
+        Random rnd = new Random();
+        int numQuestions = rnd.nextInt(5);
+        builder.setMessage(questionLibrary.getQuestion(numQuestions));
+
+
+        CharSequence [] answers = questionLibrary.getChoices(numQuestions);
+
+        builder.setSingleChoiceItems(answers, -1, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int item) {
+                switch(item){
+                    case 0:
+                        Toast.makeText(MainActivity.this, "CORREEECT!", Toast.LENGTH_LONG).show();
+                        break;
+                    case 1:
+                        Toast.makeText(MainActivity.this, "WRONG answer!", Toast.LENGTH_LONG).show();
+                        break;
+                    case 2:
+                        Toast.makeText(MainActivity.this, "WRONG answer!", Toast.LENGTH_LONG).show();
+                        break;
+                }
+                dialog.dismiss();
+            }
+        });
+        alertDialog1 = builder.create();
+        alertDialog1.show();
+    }
 }
+
