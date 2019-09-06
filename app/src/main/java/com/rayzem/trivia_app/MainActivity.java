@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         questionLibrary = new QuestionLibrary();
 
-        bottle.setOnClickListener(this);
+
 
         showAlertDialogNames();
     }
@@ -247,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if ((now - mRotationTime) > ROTATION_WAIT_TIME_MS) {
                 if (Math.abs(sensorEvent.values[2]) > 2)
                     rotateBottle();
-                else if (sensorEvent.values[2] <= 0) {
+                else if (sensorEvent.values[2] <= 0.4) {
                     if (rotateAnimation != null && rotateAnimation.hasEnded()) {
                         rotateAnimation.cancel();
                     }
@@ -320,7 +320,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         dialog.show();
 
-        //dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(false);
 
         if (COUNT_NUMBER_PLAYERS >= 2) {
             dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setEnabled(true);
@@ -347,9 +346,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             equals = number1 != number2;
         }
-
-        Log.i("OSCAR",""+number1);
-        Log.i("OSCAR",""+number2);
 
         numbers[0] = number1;
         numbers[1] = number2;
